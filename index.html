@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="若松⇔金大">
+<meta name="theme-color" content="#0E0E10">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>若松 ⇔ 金沢大学 バス</title>
+<style>
+  :root{
+    --bg:#0E0E10;--panel:#17171B;--panel-2:#1F1F25;--line:#2A2A31;
+    --led:#FFB000;--led-dim:#6b5418;--red:#D32338;
+    --text:#EDEAE3;--muted:#86837C;--muted-2:#56544F;
+    --jp:-apple-system,"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;
+    --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,monospace;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);}
+  body{font-family:var(--jp);color:var(--text);min-height:100vh;
+    background:radial-gradient(120% 60% at 50% -10%, #1a1a20 0%, var(--bg) 60%);
+    padding:calc(env(safe-area-inset-top) + 14px) calc(env(safe-area-inset-right) + 16px)
+            calc(env(safe-area-inset-bottom) + 28px) calc(env(safe-area-inset-left) + 16px);
+    max-width:520px;margin:0 auto;-webkit-font-smoothing:antialiased;}
+  .top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;}
+  .brand{display:flex;align-items:center;gap:8px;}
+  .brand .tag{font-size:11px;letter-spacing:.16em;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:3px 7px;}
+  .brand h1{font-size:15px;font-weight:700;margin:0;letter-spacing:.02em;}
+  .clock{font-family:var(--mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:10px;}
+  .seg button{appearance:none;border:0;background:transparent;color:var(--muted);font-family:var(--jp);font-size:14px;font-weight:600;padding:11px 6px;border-radius:9px;cursor:pointer;transition:background .15s,color .15s;line-height:1.2;}
+  .seg button .arrow{color:var(--muted-2);font-weight:400;margin:0 4px;}
+  .seg button.active{background:var(--red);color:#fff;}
+  .seg button.active .arrow{color:rgba(255,255,255,.7);}
+  .days{display:flex;gap:7px;margin-bottom:12px;align-items:center;}
+  .days button{appearance:none;border:1px solid var(--line);background:var(--panel);color:var(--muted);font-family:var(--jp);font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:999px;cursor:pointer;transition:all .15s;}
+  .days button.active{background:var(--text);color:#111;border-color:var(--text);}
+  .days .auto-dot{font-size:10px;color:var(--led);margin-left:5px;}
+  .break-toggle{margin-left:auto;display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--muted);cursor:pointer;user-select:none;}
+  .switch{width:38px;height:22px;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);position:relative;transition:background .2s;flex:none;}
+  .switch::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--muted);transition:transform .2s,background .2s;}
+  .break-toggle.on .switch{background:var(--led-dim);border-color:var(--led);}
+  .break-toggle.on .switch::after{transform:translateX(16px);background:var(--led);}
+  .break-toggle.on{color:var(--led);}
+  .board{background:linear-gradient(180deg,#101013,#0a0a0c);border:1px solid var(--line);border-radius:18px;padding:18px 18px 16px;margin-bottom:14px;position:relative;overflow:hidden;}
+  .board::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0 2px,transparent 2px 4px);pointer-events:none;}
+  .board .label{font-size:11px;letter-spacing:.2em;color:var(--muted);margin-bottom:12px;}
+  .board .row{display:flex;align-items:center;gap:12px;position:relative;}
+  .chip{flex:none;background:var(--red);color:#fff;font-family:var(--mono);font-weight:700;font-size:18px;width:46px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;letter-spacing:.02em;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);}
+  .dest{flex:1;min-width:0;}
+  .dest .to{font-size:18px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .dest .via{font-size:11.5px;color:var(--muted);margin-top:3px;}
+  .depart{flex:none;text-align:right;}
+  .depart .t{font-family:var(--mono);font-size:30px;font-weight:700;color:var(--led);line-height:1;font-variant-numeric:tabular-nums;text-shadow:0 0 14px rgba(255,176,0,.25);}
+  .count{margin-top:14px;display:flex;align-items:baseline;gap:8px;border-top:1px solid var(--line);padding-top:12px;}
+  .count .n{font-family:var(--mono);font-size:34px;font-weight:700;color:var(--text);line-height:1;font-variant-numeric:tabular-nums;}
+  .count .u{font-size:13px;color:var(--muted);}
+  .count .soon{color:var(--led);}
+  .board.empty .row{opacity:.4;}
+  .ended{font-size:14px;color:var(--muted);line-height:1.6;}
+  .listhdr{display:flex;justify-content:space-between;align-items:baseline;margin:4px 2px 8px;}
+  .listhdr .h{font-size:12px;letter-spacing:.16em;color:var(--muted);}
+  .listhdr .c{font-size:12px;color:var(--muted-2);font-family:var(--mono);}
+  ul.times{list-style:none;margin:0;padding:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+  ul.times li{display:flex;align-items:center;gap:11px;padding:13px 16px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;}
+  ul.times li:last-child{border-bottom:0;}
+  ul.times li .lt{font-family:var(--mono);font-size:18px;font-weight:600;width:60px;}
+  ul.times li .meta{flex:1;font-size:12.5px;color:var(--muted);}
+  ul.times li .badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;flex:none;}
+  ul.times li .star{color:var(--led);font-size:12px;flex:none;}
+  li.past{opacity:.4;}
+  li.past .lt{color:var(--muted);}
+  li.next{background:rgba(255,176,0,.06);}
+  li.next .lt{color:var(--led);}
+  li.next .badge{background:var(--led);color:#1a1300;}
+  li .badge.upcoming{background:var(--panel-2);color:var(--muted);}
+  li.suspended .lt{text-decoration:line-through;color:var(--muted-2);}
+  li.suspended .badge{background:transparent;color:var(--muted-2);border:1px solid var(--line);}
+  .empty-list{padding:26px 16px;text-align:center;color:var(--muted);font-size:13px;line-height:1.7;}
+  .actions{display:flex;gap:9px;margin-top:16px;}
+  .actions a,.actions button{flex:1;appearance:none;text-decoration:none;text-align:center;border:1px solid var(--line);background:var(--panel);color:var(--text);font-family:var(--jp);font-size:13.5px;font-weight:600;padding:13px;border-radius:12px;cursor:pointer;}
+  .legend{font-size:11.5px;color:var(--muted);margin-top:16px;line-height:1.8;}
+  .legend .star{color:var(--led);}
+  .note{font-size:10.5px;color:var(--muted-2);text-align:center;margin-top:10px;line-height:1.7;}
+  .sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .2s;z-index:10;}
+  .sheet-bg.open{opacity:1;pointer-events:auto;}
+  .sheet{position:fixed;left:0;right:0;bottom:0;z-index:11;background:var(--panel);border-top-left-radius:20px;border-top-right-radius:20px;border-top:1px solid var(--line);padding:20px 18px calc(env(safe-area-inset-bottom) + 22px);max-width:520px;margin:0 auto;max-height:88vh;overflow-y:auto;transform:translateY(102%);transition:transform .26s cubic-bezier(.32,.72,0,1);}
+  .sheet.open{transform:translateY(0);}
+  .sheet h2{font-size:16px;margin:0 0 4px;}
+  .sheet .sub{font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6;}
+  .sheet .edit-dir{font-size:12px;color:var(--led);font-weight:700;margin:6px 0;}
+  .sheet label{display:block;font-size:13px;font-weight:700;margin:14px 0 6px;}
+  .sheet textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;color:var(--text);font-family:var(--mono);font-size:14px;line-height:1.6;padding:11px 12px;resize:vertical;min-height:72px;}
+  .sheet textarea:focus{outline:none;border-color:var(--led-dim);}
+  .sheet-actions{display:flex;gap:9px;margin-top:18px;}
+  .sheet-actions button{flex:1;appearance:none;border:1px solid var(--line);background:var(--bg);color:var(--text);font-family:var(--jp);font-size:14px;font-weight:700;padding:14px;border-radius:12px;cursor:pointer;}
+  .sheet-actions .save{background:var(--red);color:#fff;border-color:var(--red);}
+  .reset-row{margin-top:14px;text-align:center;}
+  .reset-row button{appearance:none;background:none;border:0;color:var(--muted);font-size:12px;text-decoration:underline;cursor:pointer;font-family:var(--jp);}
+
+  .pole{flex:none;font-family:var(--mono);font-weight:700;font-size:12px;width:22px;height:22px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;letter-spacing:0;}
+  .pole.A{background:rgba(86,170,255,.16);color:#7CC0FF;box-shadow:inset 0 0 0 1px rgba(124,192,255,.4);}
+  .pole.C{background:rgba(120,210,140,.16);color:#86E0A0;box-shadow:inset 0 0 0 1px rgba(134,224,160,.4);}
+  .pole.AC{background:rgba(255,176,0,.16);color:var(--led);box-shadow:inset 0 0 0 1px rgba(255,176,0,.4);}
+  .board .pole{width:auto;height:24px;padding:0 9px;font-size:12px;border-radius:7px;}
+  .pole-filter{display:flex;gap:6px;margin:0 0 12px;}
+  .pole-filter button{appearance:none;border:1px solid var(--line);background:var(--panel);color:var(--muted);font-family:var(--jp);font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px;cursor:pointer;display:flex;align-items:center;gap:6px;}
+  .pole-filter button .dot{width:9px;height:9px;border-radius:50%;}
+  .pole-filter button .dot.A{background:#7CC0FF;} .pole-filter button .dot.C{background:#86E0A0;}
+  .pole-filter button.active{background:var(--text);color:#111;border-color:var(--text);}
+  .pole-legend{display:flex;gap:14px;font-size:11.5px;color:var(--muted);margin-top:14px;}
+  .pole-legend span{display:flex;align-items:center;gap:6px;}
+  .pole-legend .pole{width:20px;height:20px;font-size:11px;}
+</style>
+</head>
+<body>
+  <div class="top">
+    <div class="brand"><span class="tag">北鉄バス</span><h1>若松 ⇔ 金沢大学</h1></div>
+    <div class="clock" id="clock">--:--</div>
+  </div>
+
+  <div class="seg" id="seg">
+    <button data-dir="w2u" class="active">若松<span class="arrow">→</span>金沢大学</button>
+    <button data-dir="u2w">金沢大学<span class="arrow">→</span>若松</button>
+  </div>
+
+  <div class="days" id="days">
+    <button data-day="weekday">平日</button>
+    <button data-day="holiday">土日祝</button>
+    <div class="break-toggle" id="breakToggle"><span>学休期間</span><span class="switch"></span></div>
+  </div>
+
+  <div class="board" id="board"></div>
+
+  <div class="pole-filter" id="poleFilter">
+    <button data-pole="all" class="active">両のりば</button>
+    <button data-pole="A"><span class="dot A"></span>Ａ 田上方向</button>
+    <button data-pole="C"><span class="dot C"></span>Ｃ 若松西から</button>
+  </div>
+
+  <div class="listhdr"><span class="h">本日の発車時刻</span><span class="c" id="listcount"></span></div>
+  <ul class="times" id="list"></ul>
+
+  <div class="actions">
+    <button id="editBtn">時刻を編集</button>
+    <a href="https://www.hokutetsu.co.jp/route-bus/timetable/" target="_blank" rel="noopener">公式時刻表</a>
+  </div>
+
+  <div class="pole-legend" id="poleLegend">
+    <span><span class="pole A">Ａ</span>田上方向のりば</span>
+    <span><span class="pole C">Ｃ</span>若松西からのりば（96 西金沢線など）</span>
+  </div>
+  <div class="legend">
+    <span class="star">★</span> 大学の学期休み期間は運休する便（右上の「学休期間」をオンにすると除外）<br>
+    若松→金沢大学は、便ごとに発車のりば（Ａ／Ｃ）を色分け表示しています。
+  </div>
+  <div class="note" id="note">改正日 2026.03.15 ・ 出典 北陸鉄道（93/94/97/99・53/96系統）</div>
+
+  <div class="sheet-bg" id="sheetBg"></div>
+  <div class="sheet" id="sheet">
+    <h2>時刻を編集</h2>
+    <p class="sub">ダイヤ改定時に更新できます。発車時刻を「HH:MM」で入力（スペース・改行区切り）。編集中の方向のみ保存します。</p>
+    <div class="edit-dir" id="editDir"></div>
+    <label>平日</label>
+    <textarea id="ta-weekday" inputmode="numeric"></textarea>
+    <label>土日祝</label>
+    <textarea id="ta-holiday" inputmode="numeric"></textarea>
+    <div class="sheet-actions">
+      <button id="cancelBtn">キャンセル</button>
+      <button class="save" id="saveBtn">この方向を保存</button>
+    </div>
+    <div class="reset-row"><button id="resetBtn">公式データ(2026.03.15)に戻す</button></div>
+  </div>
+
+<script>
+var DATA = {
+  w2u:{ weekday:["7:33","7:52","7:59","8:03","8:05","8:06","8:07","8:10","8:12","8:13","8:15","8:21","8:22","8:26","8:32","8:35","8:46","8:57","9:06","9:12","9:27","9:34","9:42","9:49","9:50","9:55","9:57","10:00","10:05","10:07","10:12","10:17","10:39","10:52","11:14","11:17","11:40","11:44","11:52","12:05","12:09","12:17","12:27","12:34","12:35","12:42","13:24","13:37","13:49","14:12","14:14","14:22","14:57","15:02","15:19","15:47","15:54","16:17","16:19","16:37","17:04","17:17","17:55","18:09","18:20","18:39","18:55","19:17","19:21","19:49","20:01","20:02","20:56"], holiday:["7:55","8:02","8:17","9:00","9:39","10:02","10:12","10:59","11:19","11:57","12:09","13:19","14:09","14:12","14:59","15:49","16:02","16:42","17:19","18:14","18:22","19:19","20:13"] },
+  u2w:{ weekday:["8:00","8:25","8:32","8:35","8:40","8:43","8:51","9:05","9:35","9:45","10:00","10:10","10:24","10:40","10:42","11:00","11:30","11:40","12:05","12:10","12:15","12:20","12:38","12:50","13:00","13:10","13:30","13:45","13:57","14:13","14:40","14:43","14:48","14:53","15:00","15:20","15:43","15:48","16:19","16:22","16:25","16:30","16:35","16:43","17:00","17:15","17:33","17:40","18:07","18:10","18:15","18:20","18:25","18:35","18:39","18:55","19:20","19:30","19:40","19:50","20:15","20:26","20:35","20:49","21:20","21:30"], holiday:["8:30","8:40","10:05","10:30","10:40","11:25","11:55","12:39","12:40","13:50","14:30","14:40","15:25","16:12","16:30","17:10","17:30","17:45","18:43","18:53","19:00","19:40","20:40"] },
+};
+var TERM = {
+  w2u:{ weekday:["8:10","8:15","8:21","8:22","9:42","10:05","10:07","12:05","12:27","12:35","14:14"], holiday:[] },
+  u2w:{ weekday:["12:05","12:50","14:40","14:43","14:53","16:25","17:15","18:07","18:35","19:50"], holiday:[] },
+};
+var POLE = {
+  w2u:{ weekday:{"7:33":"C","7:52":"C","7:59":"A","8:03":"C","8:05":"C","8:06":"C","8:07":"A","8:10":"C","8:12":"C","8:13":"C","8:15":"C","8:21":"C","8:22":"C","8:26":"C","8:32":"C","8:35":"A","8:46":"C","8:57":"C","9:06":"C","9:12":"C","9:27":"C","9:34":"A","9:42":"C","9:49":"C","9:50":"C","9:55":"C","9:57":"C","10:00":"C","10:05":"C","10:07":"C","10:12":"C","10:17":"C","10:39":"C","10:52":"C","11:14":"C","11:17":"C","11:40":"C","11:44":"C","11:52":"C","12:05":"C","12:09":"C","12:17":"C","12:27":"C","12:34":"C","12:35":"C","12:42":"C","13:24":"C","13:37":"C","13:49":"A","14:12":"C","14:14":"A","14:22":"C","14:57":"C","15:02":"C","15:19":"A","15:47":"C","15:54":"A","16:17":"C","16:19":"A","16:37":"C","17:04":"A","17:17":"C","17:55":"A","18:09":"C","18:20":"A","18:39":"C","18:55":"A","19:17":"C","19:21":"C","19:49":"C","20:01":"C","20:02":"A","20:56":"C"}, holiday:{"7:55":"C","8:02":"C","8:17":"A","9:00":"C","9:39":"A","10:02":"C","10:12":"C","10:59":"A","11:19":"A","11:57":"C","12:09":"A","13:19":"A","14:09":"A","14:12":"C","14:59":"A","15:49":"A","16:02":"C","16:42":"C","17:19":"A","18:14":"A","18:22":"C","19:19":"A","20:13":"C"} }
+};
+
+(function(){
+  "use strict";
+  var DIR_INFO={ w2u:{chip:"金大",to:"金沢大学",via:"若松 → 金沢大学方面"},
+                 u2w:{chip:"若松",to:"若松方面",via:"金沢大学 → 若松・金沢駅方面"} };
+  var DEFAULT=JSON.parse(JSON.stringify(DATA));
+  var STORE_KEY="hokutetsu_w_kdai_v2";
+
+  function loadOverride(){
+    try{var r=localStorage.getItem(STORE_KEY);if(r){var p=JSON.parse(r);if(p&&p.w2u&&p.u2w)return p;}}catch(e){}
+    return null;
+  }
+  var override=loadOverride();
+  if(override){ DATA=override; }
+  function persist(){ try{localStorage.setItem(STORE_KEY,JSON.stringify(DATA));}catch(e){} }
+  function clearStore(){ try{localStorage.removeItem(STORE_KEY);}catch(e){} }
+
+  var HOLIDAYS={"2026-01-01":1,"2026-01-12":1,"2026-02-11":1,"2026-02-23":1,"2026-03-20":1,
+    "2026-04-29":1,"2026-05-03":1,"2026-05-04":1,"2026-05-05":1,"2026-05-06":1,"2026-07-20":1,
+    "2026-08-11":1,"2026-09-21":1,"2026-09-22":1,"2026-09-23":1,"2026-10-12":1,"2026-11-03":1,"2026-11-23":1,
+    "2027-01-01":1,"2027-01-11":1,"2027-02-11":1,"2027-02-23":1,"2027-03-21":1,"2027-03-22":1,
+    "2027-04-29":1,"2027-05-03":1,"2027-05-04":1,"2027-05-05":1};
+  function pad(n){return n<10?"0"+n:""+n;}
+  function dateKey(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());}
+  function autoDayType(d){ if(HOLIDAYS[dateKey(d)])return "holiday"; var w=d.getDay(); return (w===0||w===6)?"holiday":"weekday"; }
+  function toMin(t){var p=t.split(":");return parseInt(p[0],10)*60+parseInt(p[1],10);}
+  function fmt(t){var p=t.split(":");return parseInt(p[0],10)+":"+pad(parseInt(p[1],10));}
+  function sortTimes(a){return a.slice().filter(function(t){return /^\d{1,2}:\d{1,2}$/.test(t.trim());}).map(function(t){return fmt(t.trim());}).sort(function(x,y){return toMin(x)-toMin(y);});}
+  function isTerm(d,day,t){var L=(TERM[d]&&TERM[d][day])||[];return L.indexOf(t)>=0;}
+  function poleOf(day,t){ return (POLE.w2u&&POLE.w2u[day]&&POLE.w2u[day][t])||"C"; }
+  function poleLabel(p){ return p==="A"?"Ａ 田上方向":(p==="AC"?"Ａ/Ｃ":"Ｃ 若松西から"); }
+  function poleTag(p){ return '<span class="pole '+p+'">'+(p==="AC"?"AC":(p==="A"?"Ａ":"Ｃ"))+'</span>'; }
+
+  var dir="w2u", dayManual=null, breakMode=false, poleFilter="all";
+  var today=autoDayType(new Date()), dayType=today;
+  var $=function(id){return document.getElementById(id);};
+  var elClock=$("clock"),elBoard=$("board"),elList=$("list"),elListCount=$("listcount"),
+      elDays=$("days"),elSeg=$("seg"),elBreak=$("breakToggle"),
+      elPoleFilter=$("poleFilter"),elPoleLegend=$("poleLegend");
+
+  function setDirBtn(){var b=elSeg.querySelectorAll("button");for(var i=0;i<b.length;i++)b[i].className=(b[i].getAttribute("data-dir")===dir)?"active":"";}
+  function setDayBtn(){
+    var b=elDays.querySelectorAll("button[data-day]");
+    for(var i=0;i<b.length;i++){var on=b[i].getAttribute("data-day")===dayType;b[i].className=on?"active":"";
+      var d=b[i].querySelector(".auto-dot");if(d)b[i].removeChild(d);
+      if(on&&dayManual===null){var s=document.createElement("span");s.className="auto-dot";s.textContent="● 今日";b[i].appendChild(s);}}
+    elBreak.className="break-toggle"+(breakMode?" on":"");
+  }
+
+  // returns array of {t, term, pole} after applying pole filter (w2u only)
+  function activeTimes(){
+    var raw=sortTimes(DATA[dir][dayType]||[]);
+    var arr=raw.map(function(t){return {t:t, term:isTerm(dir,dayType,t), pole:(dir==="w2u"?poleOf(dayType,t):null)};});
+    if(dir==="w2u" && poleFilter!=="all"){
+      arr=arr.filter(function(it){return it.pole===poleFilter || it.pole==="AC";});
+    }
+    return arr;
+  }
+
+  function render(){
+    setDirBtn(); setDayBtn();
+    var isW2U=(dir==="w2u");
+    elPoleFilter.style.display=isW2U?"flex":"none";
+    elPoleLegend.style.display=isW2U?"flex":"none";
+    var pb=elPoleFilter.querySelectorAll("button");
+    for(var pi=0;pi<pb.length;pi++) pb[pi].className=(pb[pi].getAttribute("data-pole")===poleFilter)?"active":"";
+    var info=DIR_INFO[dir];
+    var items=activeTimes();
+    var now=new Date(), nowMin=now.getHours()*60+now.getMinutes();
+    var viewingToday=(dayManual===null)||(dayManual===today);
+
+    // next = first running bus >= now
+    var nextIdx=-1;
+    for(var i=0;i<items.length;i++){
+      if(breakMode&&items[i].term) continue;
+      if(toMin(items[i].t)>=nowMin){nextIdx=i;break;}
+    }
+
+    if(items.length===0){
+      elBoard.className="board empty";
+      elBoard.innerHTML='<div class="label">発車案内</div><div class="ended">この区分の時刻が未登録です。</div>';
+    }else if(nextIdx===-1||!viewingToday){
+      var first=null;
+      for(var k=0;k<items.length;k++){ if(!(breakMode&&items[k].term)){first=items[k].t;break;} }
+      var msg=viewingToday?"本日の運行は終了しました":"選択中の区分の始発";
+      elBoard.className="board";
+      elBoard.innerHTML='<div class="label">発車案内</div><div class="row">'+
+        '<div class="chip">'+info.chip+'</div><div class="dest"><div class="to">'+info.to+'</div><div class="via">'+msg+'</div></div>'+
+        '<div class="depart"><div class="t">'+(first||"--:--")+'</div></div></div>';
+    }else{
+      var t=items[nextIdx].t, diff=toMin(t)-nowMin, soon=diff<=10;
+      var termTag=(items[nextIdx].term&&!breakMode)?' <span style="color:var(--led)">★学休運休</span>':'';
+      var via=isW2U?('のりば '+poleLabel(items[nextIdx].pole)+termTag):(info.via+termTag);
+      var poleP=isW2U?poleTag(items[nextIdx].pole):('<div class="chip">'+info.chip+'</div>');
+      elBoard.className="board";
+      elBoard.innerHTML='<div class="label">つぎのバス</div><div class="row">'+
+        poleP+'<div class="dest"><div class="to">'+info.to+'</div><div class="via">'+via+'</div></div>'+
+        '<div class="depart"><div class="t">'+t+'</div></div></div>'+
+        '<div class="count"><span class="n'+(soon?' soon':'')+'">'+diff+'</span><span class="u">分後に発車'+(diff===0?'（まもなく）':'')+'</span></div>';
+    }
+
+    // list
+    var shown=items.filter(function(it){return !(breakMode&&it.term);});
+    elListCount.textContent=shown.length+"本";
+    if(items.length===0){ elList.innerHTML='<li class="empty-list">時刻が未登録です。</li>'; return; }
+    var html="";
+    for(var j=0;j<items.length;j++){
+      var it=items[j], past=viewingToday&&toMin(it.t)<nowMin;
+      var suspended=breakMode&&it.term;
+      var isNext=viewingToday&&(j===nextIdx);
+      var cls=suspended?"suspended":(isNext?"next":(past?"past":""));
+      var star=it.term?'<span class="star">★</span>':'';
+      var right;
+      if(suspended) right='<span class="badge">運休</span>';
+      else if(isW2U) right=poleTag(it.pole);
+      else if(isNext) right='<span class="badge">つぎ</span>';
+      else if(past) right='<span class="meta">発車済</span>';
+      else right='<span class="badge upcoming">'+info.to+'</span>';
+      var mid=isNext?'<span class="meta">'+(toMin(it.t)-nowMin)+'分後</span>':'<span class="meta"></span>';
+      html+='<li class="'+cls+'"><span class="lt">'+it.t+'</span>'+mid+star+right+'</li>';
+    }
+    elList.innerHTML=html;
+  }
+
+  function tickClock(){var d=new Date();elClock.textContent=pad(d.getHours())+":"+pad(d.getMinutes())+":"+pad(d.getSeconds());}
+
+  elSeg.addEventListener("click",function(e){var b=e.target.closest("button[data-dir]");if(!b)return;dir=b.getAttribute("data-dir");render();});
+  elDays.addEventListener("click",function(e){var b=e.target.closest("button[data-day]");if(!b)return;var d=b.getAttribute("data-day");dayManual=(d===today)?null:d;dayType=d;render();});
+  elBreak.addEventListener("click",function(){breakMode=!breakMode;render();});
+  elPoleFilter.addEventListener("click",function(e){var b=e.target.closest("button[data-pole]");if(!b)return;poleFilter=b.getAttribute("data-pole");render();});
+
+  var sheet=$("sheet"),sheetBg=$("sheetBg");
+  function openSheet(){
+    $("editDir").textContent="編集中の方向： "+DIR_INFO[dir].to+"ゆき";
+    $("ta-weekday").value=(DATA[dir].weekday||[]).join("  ");
+    $("ta-holiday").value=(DATA[dir].holiday||[]).join("  ");
+    sheetBg.classList.add("open");sheet.classList.add("open");
+  }
+  function closeSheet(){sheetBg.classList.remove("open");sheet.classList.remove("open");}
+  function parseField(v){return v.split(/[\s,、，]+/).map(function(s){return s.trim();}).filter(function(s){return /^\d{1,2}:\d{1,2}$/.test(s);});}
+  $("editBtn").addEventListener("click",openSheet);
+  $("cancelBtn").addEventListener("click",closeSheet);
+  sheetBg.addEventListener("click",closeSheet);
+  $("saveBtn").addEventListener("click",function(){
+    DATA[dir].weekday=sortTimes(parseField($("ta-weekday").value));
+    DATA[dir].holiday=sortTimes(parseField($("ta-holiday").value));
+    persist();closeSheet();render();
+  });
+  $("resetBtn").addEventListener("click",function(){
+    if(confirm("公式データ(2026.03.15)に戻しますか？編集内容は消えます。")){clearStore();DATA=JSON.parse(JSON.stringify(DEFAULT));closeSheet();render();}
+  });
+
+  tickClock();render();
+  setInterval(tickClock,1000);
+  setInterval(function(){today=autoDayType(new Date());if(dayManual===null)dayType=today;render();},30000);
+})();
+</script>
+</body>
+</html>
